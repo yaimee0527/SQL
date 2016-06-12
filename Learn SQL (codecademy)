@@ -26,6 +26,49 @@ Select distinct genre
 from movies;
 # return unique values in the result set
 
+#select where like
+select * from movies
+where name like 'se_en';
+# != is 'not equal' and se_en means the spelling may different
+
+select * from movies 
+where name like '%man%';
+# unlike_ % matches zero or more missing letters in the pattern
+#like is not case sensitive
+
+#select where between
+select * from moviews
+where name between 'A' and 'J';
+#data type is text so be careful about case
+
+# AND & OR
+select * from movies
+where year between 
+1990 and 2000
+and genre = 'comedy';
+
+select * from movies
+where genre = 'comedy'
+or year <1980;
+
+#ORDER BY
+select *from movies
+order by imdb_rating
+desc;
+
+#LIMIT
+select * from movies
+order by imdb_dating
+asc
+limit 3;
+
+
+
+
+
+
+
+
 
 
 
