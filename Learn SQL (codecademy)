@@ -62,6 +62,86 @@ order by imdb_dating
 asc
 limit 3;
 
+#COUNT()
+select count(*) from fake_apps;
+#() takes the number of rows where the column is not NULL
+
+#GROUP BY
+select price, count(*) 
+from fake_apps
+group by price;
+#dont forget to select the group by column
+
+#SUM()
+select sum(downloads)
+from fake_apps;
+
+#MAX()
+select max(downloads)
+from fake_apps;
+
+select name,category, max(downloads)
+from fake_apps
+group by category;
+
+#MIN()
+select min(downloads)
+from fake_apps;
+
+select name, category, min(downloads)
+from fake_apps
+group by category;
+
+#AVG()
+select avg(downloads)
+from fake_apps;
+
+select price,avg(downloads)
+from fake_apps
+group by price;
+
+#ROUND()
+select price, round(avg(downloads),2)
+from fake_apps
+group by price;
+
+#PRIMARY KEY
+create table artists(id integer primary key, name text)
+#none of the values in this column are NULL
+#each value in this column is unique
+#a table cannot have more than one primary key column
+
+#FOREIGN KEY
+alter table albums
+add foreign key (artist_id) references artists(id);
+
+#CROSS JOIN
+select albums.name, albums.year, artists.name
+from albums, artists;
+#not very useful because just purely combine columns from multiple tables together
+
+#INNER JOIN
+select * from albums join artists 
+on albums.artist_id= artists.id;
+
+#LEFT JOIN
+select * from albums
+left join artists
+on albums.artist_id = artists.id;
+
+#rename columns using AS
+select albums.name as 'albums',albums.year,artists.name as 'artist'
+from albums join artists 
+on albums.artist_id = artists.id
+where albums.year>1980;
+
+
+
+
+
+
+
+
 
 
 
