@@ -1,0 +1,34 @@
+#create table with columns
+Create table celebs (id integer, name text, age number)
+#create table table_name(column_name data type,…)
+
+#insert rows
+insert into celebs(id,name,age) values(1,'justin bieber',21);
+#view the table or columns
+select* from celebs;
+
+#edit a row
+update celebs
+Set age =22
+Where id=1;
+#set indicates the column to edit and where indicates the row to edit
+
+#add a new column
+alter table celebs 
+add column twitter_handle text;
+
+#delete rows
+delete from celebs
+where twitter_handle is null;
+
+#select distinct
+Select distinct genre
+from movies;
+# return unique values in the result set
+
+
+
+
+
+
+
