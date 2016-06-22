@@ -1,1 +1,125 @@
-#non-correlated
+# non-correlated subquery: can be run independently of the outer query,can be used to complete a multi-step transformation
+SELECT * 
+FROM flights 
+WHERE origin in (
+    SELECT code 
+    FROM airports 
+    WHERE fac_type = 'SEAPLANE_BASE');
+
+SELECT a.dep_month,
+       a.dep_day_of_week,
+       AVG(a.flight_distance) AS average_distance
+  FROM (
+        SELECT dep_month,
+              dep_day_of_week,
+               dep_date,
+               sum(distance) AS flight_distance
+          FROM flights
+         GROUP BY 1,2,3
+       ) a
+ GROUP BY 1,2
+ ORDER BY 1,2;
+# 1,2,3 means the columns so the order of columns matters
+
+# correlated subquery: cannot be run independently of the outer query. the order of operations is important. for each row processed
+by the outer query, the subquery will also be processed for that row
+select id
+from flights as f
+where distance < (
+select avg(distance)
+from flights
+where carrier = f.carrier);
+# the inner query has to be re-executed for each flight
+
+# giving a sequence number
+select carrier, id,
+(select count(*)
+from flights f
+where f.id <flights.id
+and 
+f.carrier = flights.carrier) +1
+as flight_sequence_number 
+from flights;
+
+SELECT Country, CustomerID,
+  (SELECT COUNT(*)
+    FROM Customers AS CustomersInner
+    WHERE CustomersInner.CustomerID < CustomersOuter.CustomerID
+    AND CustomersInner.Country=CustomersOuter.Country) + 1
+  AS customer_seq_num
+FROM Customers AS CustomersOuter ORDER BY Country;
+# better explanation for the use of "from flights f"
+
+# UNION: merge columns (join: merge rows)
+# Each SELECT statement within the UNION must have the same number of columns with similar data types. The columns in each SELECT statement must be in the same order. By default, the UNION operator selects only distinct values.
+SELECT id, avg(a.sale_price) FROM (
+  SELECT id, sale_price FROM order_items
+  UNION ALL
+  SELECT id, sale_price FROM order_items_historic) AS a 
+  GROUP BY 1;
+# UNION ALL means accept duplicated rows
+# GROUP BY 1: want to know the avg_price for each item so should group by id
+
+# INTERSECT : only return the common rows in both tables
+select category from new_products
+intersect
+select category from legacy_products;
+
+# EXCEPT: return the rows in the first table but not in the second table
+select category from new_products
+except
+select category from legacy_products;
+
+# COUNT(*) 
+SELECT COUNT(*) FROM flights
+WHERE arr_time IS NOT NULL
+and destination = 'ATL';
+# IS NULL OR IS NOT NULL, and don't forget the '' for the text data 
+
+# CASE (when then else)
+select
+   case
+   when elevation <250 then 'Low'
+   when elevation between 250 and 1749 then 'Medium'
+   when elevation > 1750 then 'High'
+   else 'Unknown'
+   end as elevation_tier, count(*)
+from airports
+group by 1;
+# conditions operations directly follow the case column
+# END is required to terminate the statement, but ELSE is optional
+
+# CASE WHEN (use in subquery as conditions)
+select state,
+       count(case when elevation < 1000 then 1 else null end)
+       as count_low_elevation_airports
+from airports
+group by state;
+
+select origin, sum(distance)
+as total_flight_distance,
+sum(case when carrier = 'DL'
+   then distance else 0 end)
+   as total_delta_flight_distance
+from flights
+group by origin;
+
+# ratios
+select origin,
+       100.0*(sum(case when carrier='DL' then distance else 0 end)/sum(distance))
+       as percentage_flight_distance_from_delta
+from flights
+group by origin;select origin,
+       100.0*(sum(case when carrier='DL' then distance else 0 end)/sum(distance))
+       as percentage_flight_distance_from_delta
+from flights
+group by origin;
+# want percentage so multiply with 100
+
+SELECT state, 
+       100.0 * sum(CASE WHEN elevation >= 2000 THEN 1 ELSE 0 END) / count(*)  
+       as percentage_high_elevation_airports 
+       FROM airports 
+       GROUP BY state;
+# ratios directly as a column then as alias
+
