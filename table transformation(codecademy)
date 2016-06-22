@@ -123,3 +123,34 @@ SELECT state,
        GROUP BY state;
 # ratios directly as a column then as alias
 
+# DATETIME
+select datetime(delivery_time)
+from baked_goods;
+# date functions can be database specific
+
+# DATE
+select date(delivery_time),
+       count(*) as count_baked_goods
+from baked_goods
+group by 1;
+
+# increment date or timestamp values by a specified interval
+select
+datetime(delivery_time,'+5 hours','20 minutes', '2 days')
+as package_time
+from baked_goods;
+
+# Numeric functions
+SELECT (number1 + number2);
+SELECT CAST(number1 AS REAL);
+SELECT ROUND(number, precision);
+
+SELECT MAX(n1,n2,n3,...)
+SELECT MIN(n1,n2,n3,...)
+
+# String manipulation
+SELECT string1 || ' ' || string2;
+
+SELECT REPLACE(ingredients,'enriched_',' ') as item_ingredients
+FROM baked_goods;
+# cannot replace "enriched_flour" with "flour"
