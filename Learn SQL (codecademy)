@@ -135,6 +135,10 @@ from albums join artists
 on albums.artist_id = artists.id
 where albums.year>1980;
 
+# LIMIT: select 10 rows
+select * 
+from new_products
+limit 10;
 
 
 
