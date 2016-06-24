@@ -1,0 +1,165 @@
+# ORDER BY
+select *
+from orders
+order by id
+limit 100;
+
+# select date from timestamps
+select date(ordered_at)
+from orders
+order by 1
+limit 100;
+
+# select columns from two tables (join on)
+select date(ordered_at), round(sum(amount_paid),2)
+from orders join order_items on 
+orders.id = order_items.order_id
+group by 1
+order by 1;
+
+# get percentage directly in ROUND statement
+select name, round(sum(amount_paid) /(select sum(amount_paid) from order_items )* 100.0,2)
+from order_items
+group by 1
+order by 2 desc;
+
+# create categories using CASE
+select *,
+  case name
+    when 'kale-smoothie'    then 'smoothie'
+    when 'banana-smoothie'  then 'smoothie'
+    when 'orange-juice'     then 'drink'
+    when 'soda'             then 'drink'
+    when 'blt'              then 'sandwich'
+    when 'grilled-cheese'   then 'sandwich'
+    when 'tikka-masala'     then 'dinner'
+    when 'chicken-parm'     then 'dinner'
+     else 'other'
+  end as category
+from order_items
+order by id
+limit 100;
+# following the CASE is the condition column name
+
+# get percentage for every category
+select *,
+  case name
+    when 'kale-smoothie'    then 'smoothie'
+    when 'banana-smoothie'  then 'smoothie'
+    when 'orange-juice'     then 'drink'
+    when 'soda'             then 'drink'
+    when 'blt'              then 'sandwich'
+    when 'grilled-cheese'   then 'sandwich'
+    when 'tikka-masala'     then 'dinner'
+    when 'chicken-parm'     then 'dinner'
+     else 'other'
+  end as category,
+  round(1.0*sum(amount_paid)/(select sum(amount_paid) from order_items)*100.0,2) as pct
+from order_items
+group by 1
+order by 2 desc;
+# here 1.0* is a shortcut to ensure the database represents the percent as a decimal
+
+# reorder rates
+select name, round(1.0* count(distinct orders.delivered_to)/ count(distinct order_items.order_id) ,2) as reorder_rate
+from order_items join orders
+on orders.id = order_items.order_id
+group by 1
+order by 2 desc;
+# dont need to add . if the column is from the table before the join
+
+# daily revenue
+select date(created_at), round(sum(price),2)
+from purchases
+group by 1
+order by 1;
+# dont forget to group by date first
+
+# daily revenue excluding refunds
+select date(created_at), round(sum(price),2)
+from purchases
+where refunded_at is not null
+group by 1
+order by 1;
+# the logic is counting the orders without refund
+
+# daily active users
+select date(created_at), count(distinct user_id) as dau
+from gameplays
+group by 1
+order by 1;
+# the point is do not double count users who played multiple times everyday
+
+# daily active users per platform
+select date(created_at), platform, count(distinct user_id) as dau
+from gameplays
+group by 1,2
+order by 1,2;
+# first we should have daily ,so group&order by 1; then we should have per platform ,so then group&order by 2
+
+# daily ARPPU- average revenue per purchasing user
+select date(created_at), round(sum(price)/count(distinct user_id),2) as arppu
+from purchases
+where refunded_at is not null
+group by 1
+order by 1;
+# Daily ARPU - average revenue per user
+# ARPPU increases if purchasers are spending more money. ARPU increases if more players are choosing to purchase, even if the purchase size stays consistent
+
+# CTE: common table expression (temporary results/tables)
+with daily_revenue as (
+select date(created_at) as dt,round(sum(price),2)as rev
+from purchases
+where refunded_at is null
+group by 1) 
+
+select * from daily_revenue 
+order by dt;
+
+# create ARPU
+with daily_revenue as (
+select date(created_at) as dt,round(sum(price),2)as rev
+from purchases
+where refunded_at is null
+group by 1),
+daily_players as (
+select date(created_at) as dt, count(distinct user_id) as players
+  from gameplays
+  group by 1)
+
+select daily_revenue.dt, daily_revenue.rev/daily_players.players
+from daily_revenue join daily_players
+on daily_revenue.dt = daily_players.dt;
+# the last row can be replaced in " using (dt)" when the name of column is the same in both tables
+
+# one-day retention
+select date(g1.created_at) as dt,
+count(distinct g1.user_id) as total_users,
+count(distinct g2.user_id) as retained_users 
+from gameplays as g1 left join gameplays as g2
+on g1.user_id = g2.user_id
+and date(g1.created_at) = date(datetime(g2.created_at, '-1 day'))
+group by 1
+order by 1
+limit 100;
+
+
+select date(g1.created_at) as dt,
+round(100* count(distinct g2.user_id) / count(distinct g1.user_id)) as retention
+from gameplays as g1 left join gameplays as g2
+on g1.user_id = g2.user_id
+and date(g1.created_at) = date(datetime(g2.created_at, '-1 day'))
+group by 1
+order by 1
+limit 100;
+# g1 table is the original table contains info that customers play on N day. 
+and g2 table contains info that customers play on N+1 day. 
+if N+1 day A played, N day in g1 will have a A follow behind.
+the reason why use DISTINCT is that if a player played exceed 2 days,
+it will repeatly appear on the second id column. and we only want to know 
+how many customers keep playing for 2 days so only counts these players for once.
+
+
+
+
+
